@@ -175,13 +175,13 @@ async def root():
         <div class="endpoint">
             <h3>🔧 Quick Test</h3>
             <p>Test the email API (replace with your Lemon Email API key):</p>
-            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "https://your-app.railway.app") + """/send-email \\
+            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "hhttps://lemon-email-mcp-production.up.railway.app") + """/send-email \\
   -H "Content-Type: application/json" \\
   -d '{
     "to": "test@example.com",
     "subject": "Test Email",
     "body": "Hello from Railway!",
-    "fromemail": "your-sender@example.com",
+    "fromemail": "mail@normanszobotka.com",
     "api_key": "your-lemon-email-api-key-here"
   }'</pre>
         </div>

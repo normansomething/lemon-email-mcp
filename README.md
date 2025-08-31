@@ -21,14 +21,14 @@ curl -X POST https://lemon-email-mcp-production.up.railway.app/send-email \
     "to": "user@example.com",
     "subject": "Hello World 👋",
     "body": "This was stupid easy to send.",
-    "fromemail": "mail@normanszobotka.com",
+    "fromemail": "mail@member-notification.com",
     "api_key": "your-key-here"
   }'
 ```
 
 **Need an API key?** → DM [@Norman_Szobotka](https://x.com/Norman_Szobotka) or email [manojk030303@gmail.com](mailto:manojk030303@gmail.com)
 
-💡 **Pro tip**: Use `mail@normanszobotka.com` as your sender - it's pre-configured and works with any API key!
+💡 **Pro tip**: If you don't want to set up DNS records with your domain, you are free to use `mail@member-notification.com` as your sender - it's pre-configured and works with any API key!
 
 ---
 

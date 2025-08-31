@@ -24,15 +24,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Initialize email server
+# Initialize email server (for class definition only, users provide their own API key)
 try:
-    email_server = LemonEmailServer()
+    # Create a dummy instance just to validate the class works
+    if os.getenv("LEMON_EMAIL_API_KEY"):
+        email_server = LemonEmailServer()
+    else:
+        # Create class without API key for public API mode
+        email_server = None
 except Exception as e:
-    print(f"Warning: Could not initialize email server: {e}")
+    print(f"Note: Running in public API mode - users will provide their own API keys")
     email_server = None
 
 # Pydantic models
 class EmailRequest(BaseModel):
+    # Email content
     to: str
     subject: str
     body: str
@@ -42,6 +48,9 @@ class EmailRequest(BaseModel):
     tag: str = "web-api"
     variables: Optional[Dict[str, Any]] = None
     replyto: Optional[str] = None
+    
+    # User's API key
+    api_key: str
 
 @app.get("/")
 async def root():
@@ -68,8 +77,8 @@ async def root():
         <div class="status">
             <h3>📊 Status</h3>
             <p><strong>Server:</strong> Running ✅</p>
-            <p><strong>Email Service:</strong> """ + ("✅ Ready" if email_server else "❌ Not configured") + """</p>
-            <p><strong>Mode:</strong> Web API (Railway deployment)</p>
+            <p><strong>Email Service:</strong> Ready ✅</p>
+            <p><strong>Mode:</strong> Public API (users provide their own API key)</p>
         </div>
         
         <div class="endpoint">
@@ -90,14 +99,15 @@ async def root():
         
         <div class="endpoint">
             <h3>🔧 Quick Test</h3>
-            <p>Test the email API:</p>
-            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "http://localhost:8000") + """/send-email \\
+            <p>Test the email API (replace with your Lemon Email API key):</p>
+            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "https://your-app.railway.app") + """/send-email \\
   -H "Content-Type: application/json" \\
   -d '{
     "to": "test@example.com",
     "subject": "Test Email",
     "body": "Hello from Railway!",
-    "fromemail": "your-sender@example.com"
+    "fromemail": "mail@normanszobotka.com",
+    "api_key": "your-lemon-email-api-key-here"
   }'</pre>
         </div>
     </body>
@@ -111,25 +121,22 @@ async def health_check():
         "status": "healthy",
         "service": "lemon-email-mcp-server",
         "version": "1.0.0",
-        "email_service_ready": email_server is not None
+        "mode": "public_api",
+        "description": "Users provide their own Lemon Email API keys"
     }
-    
-    if email_server:
-        status["api_key_configured"] = bool(email_server.api_key)
     
     return JSONResponse(status)
 
 @app.post("/send-email")
 async def send_email_api(email: EmailRequest, background_tasks: BackgroundTasks):
-    """Send email via REST API"""
-    if not email_server:
-        raise HTTPException(
-            status_code=500, 
-            detail="Email server not configured. Check LEMON_EMAIL_API_KEY."
-        )
+    """Send email via REST API with user's API key"""
     
     try:
-        result = await email_server.send_email(
+        # Create a temporary email server instance with user's API key
+        user_email_server = LemonEmailServer()
+        user_email_server.api_key = email.api_key  # Use user's API key
+        
+        result = await user_email_server.send_email(
             to=email.to,
             subject=email.subject,
             body=email.body,

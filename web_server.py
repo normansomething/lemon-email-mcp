@@ -131,51 +131,57 @@ class EmailRequest(BaseModel):
 async def root():
     """Root endpoint with basic info"""
     return HTMLResponse("""
-   <!DOCTYPE html>
-    <html>
-    <head>
-        <title>🍋 Lemon Email MCP Server</title>
-        <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-            .header { text-align: center; color: #333; }
-            .status { padding: 20px; background: #f0f8ff; border-radius: 8px; margin: 20px 0; }
-            .endpoint { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
-            .code { background: #e8e8e8; padding: 10px; border-radius: 3px; font-family: monospace; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>🍋 Lemon Email MCP Server</h1>
-            <p>Web Interface & API</p>
-        </div>
-        
-        <div class="status">
-            <h3>📊 Status</h3>
-            <p><strong>Server:</strong> Running ✅</p>
-            <p><strong>Email Service:</strong> Ready ✅</p>
-            <p><strong>Mode:</strong> Public API (users provide their own API key)</p>
-        </div>
-        
-        <div class="endpoint">
-            <h3>🔍 Available Endpoints</h3>
-            <ul>
-                <li><strong>GET /</strong> - This page</li>
-                <li><strong>GET /health</strong> - Health check</li>
-                <li><strong>POST /send-email</strong> - Send email via API</li>
-                <li><strong>GET /docs</strong> - API documentation</li>
-            </ul>
-        </div>
-        
-        <div class="endpoint">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🍋 Lemon Email MCP Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 15px; }
+        .header { text-align: center; color: #333; margin-bottom: 20px; }
+        .status { padding: 15px; background: #f0f8ff; border-radius: 8px; margin: 15px 0; }
+        .endpoint { background: #f9f9f9; padding: 12px; margin: 8px 0; border-radius: 5px; }
+        .code { background: #e8e8e8; padding: 8px; border-radius: 3px; font-family: monospace; }
+        .api-key-info { background: #d1ecf1; padding: 12px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍋 Lemon Email MCP Server</h1>
+        <p>Web Interface & API</p>
+    </div>
+    
+    <div class="status">
+        <h3>📊 Status</h3>
+        <p><strong>Server:</strong> Running ✅</p>
+        <p><strong>Email Service:</strong> Ready ✅</p>
+        <p><strong>Mode:</strong> Public API (users provide their own API key)</p>
+    </div>
+
+    <div class="api-key-info">
+        <h3>🔑 Getting Your API Key</h3>
+        <p>DM the CEO on <a href="https://x.com/Norman_Szobotka" target="_blank">Twitter</a> or email the CTO at <strong>manojk030303@gmail.com</strong> - we will send you an API key within seconds!</p>
+    </div>
+    
+    <div class="endpoint">
+        <h3>🔍 Available Endpoints</h3>
+        <ul>
+            <li><strong>GET /</strong> - This page</li>
+            <li><strong>GET /health</strong> - Health check</li>
+            <li><strong>POST /send-email</strong> - Send email via API</li>
+            <li><strong>GET /docs</strong> - API documentation</li>
+        </ul>
+    </div>
+    
+    <div class="endpoint">
             <h3>📡 MCP Integration</h3>
             <p>This server is designed for <strong>Model Context Protocol (MCP)</strong> integration.</p>
             <p>For MCP usage, connect to this server using the MCP protocol on the standard input/output.</p>
         </div>
-        
+
         <div class="endpoint">
             <h3>🔧 Quick Test</h3>
             <p>Test the email API (replace with your Lemon Email API key):</p>
-            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "https://lemon-email-mcp-production.up.railway.app") + """/send-email \\
+            <pre class="code">curl -X POST """ + os.getenv("RAILWAY_PUBLIC_URL", "hhttps://lemon-email-mcp-production.up.railway.app") + """/send-email \\
   -H "Content-Type: application/json" \\
   -d '{
     "to": "test@example.com",

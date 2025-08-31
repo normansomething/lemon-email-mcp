@@ -14,8 +14,91 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import uvicorn
 
-# Import your existing email server
-from simple_mcp_server import LemonEmailServer
+class LemonEmailServerWeb:
+    """Modified LemonEmailServer for web API that accepts API key directly"""
+    def __init__(self, api_key: str = None):
+        self.api_base_url = os.getenv("LEMON_EMAIL_API_BASE_URL", "https://app.xn--lemn-sqa.com/api")
+        self.api_key = api_key
+        
+        if not self.api_key:
+            # Only require env variable if no API key provided
+            self.api_key = os.getenv("LEMON_EMAIL_API_KEY")
+            if not self.api_key:
+                # Don't raise error here - will be handled when trying to send
+                pass
+    
+    async def send_email(
+        self,
+        to: str,
+        subject: str,
+        body: str,
+        fromname: str = "Email Assistant",
+        fromemail: Optional[str] = None,
+        toname: str = "",
+        tag: str = "mcp-agent",
+        variables: Optional[Dict[str, Any]] = None,
+        replyto: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Send an email using the Lemon Email API"""
+        
+        if not self.api_key:
+            return {
+                "success": False,
+                "error": "API key is required"
+            }
+        
+        if not replyto:
+            replyto = fromemail
+        
+        payload = {
+            "fromname": fromname,
+            "fromemail": fromemail,
+            "to": to,
+            "toname": toname,
+            "subject": subject,
+            "body": body,
+            "tag": tag,
+            "variables": variables or {},
+            "replyto": replyto
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "X-Auth-APIKey": self.api_key
+        }
+        
+        url = f"{self.api_base_url}/transactional/send"
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    url, 
+                    headers=headers, 
+                    json=payload,
+                    timeout=30.0
+                )
+                
+                response_data = {
+                    "status_code": response.status_code,
+                    "response": response.text,
+                    "success": response.is_success
+                }
+                
+                if not response.is_success:
+                    response_data["error"] = f"API error {response.status_code}: {response.text}"
+                
+                return response_data
+                
+            except httpx.TimeoutException:
+                return {
+                    "success": False,
+                    "error": "Request timed out after 30 seconds"
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Network error: {str(e)}"
+                }
 
 # FastAPI app
 app = FastAPI(
@@ -25,16 +108,7 @@ app = FastAPI(
 )
 
 # Initialize email server (for class definition only, users provide their own API key)
-try:
-    # Create a dummy instance just to validate the class works
-    if os.getenv("LEMON_EMAIL_API_KEY"):
-        email_server = LemonEmailServer()
-    else:
-        # Create class without API key for public API mode
-        email_server = None
-except Exception as e:
-    print(f"Note: Running in public API mode - users will provide their own API keys")
-    email_server = None
+email_server = None  # Not needed for public API mode
 
 # Pydantic models
 class EmailRequest(BaseModel):
@@ -106,7 +180,7 @@ async def root():
     "to": "test@example.com",
     "subject": "Test Email",
     "body": "Hello from Railway!",
-    "fromemail": "mail@normanszobotka.com",
+    "fromemail": "your-sender@example.com",
     "api_key": "your-lemon-email-api-key-here"
   }'</pre>
         </div>
@@ -132,9 +206,8 @@ async def send_email_api(email: EmailRequest, background_tasks: BackgroundTasks)
     """Send email via REST API with user's API key"""
     
     try:
-        # Create a temporary email server instance with user's API key
-        user_email_server = LemonEmailServer()
-        user_email_server.api_key = email.api_key  # Use user's API key
+        # Create email server instance with user's API key
+        user_email_server = LemonEmailServerWeb(api_key=email.api_key)
         
         result = await user_email_server.send_email(
             to=email.to,
